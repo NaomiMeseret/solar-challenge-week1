@@ -1,5 +1,19 @@
 """
 Data profiling utilities for comprehensive dataset analysis.
+
+This module provides the DataProfiler class for generating detailed statistical
+profiles of solar radiation datasets. It includes methods for summary statistics,
+missing value analysis, outlier detection, and data quality scoring.
+
+Typical usage example:
+    profiler = DataProfiler(df)
+    summary = profiler.generate_summary_statistics()
+    missing_report = profiler.missing_value_report()
+    outliers = profiler.detect_outliers_zscore()
+    quality_score = profiler.calculate_quality_score()
+
+Author: Naomi Meseret
+Date: November 2025
 """
 
 import pandas as pd
@@ -9,16 +23,36 @@ from scipy import stats
 
 
 class DataProfiler:
-    """Profile and analyze solar radiation datasets."""
+    """
+    Profile and analyze solar radiation datasets with comprehensive statistics.
+    
+    This class provides methods for data quality assessment including summary
+    statistics, missing value analysis, outlier detection using Z-score and IQR
+    methods, and overall data quality scoring.
+    
+    Attributes:
+        df (pd.DataFrame): Copy of the dataset being profiled
+        numeric_cols (List[str]): List of numeric column names
+        
+    Example:
+        >>> profiler = DataProfiler(df)
+        >>> stats = profiler.generate_summary_statistics()
+        >>> print(f"Mean GHI: {stats.loc['mean', 'GHI']:.2f}")
+    """
     
     def __init__(self, df: pd.DataFrame):
         """
-        Initialize profiler with dataset.
+        Initialize profiler with dataset to analyze.
+        
+        Creates a copy of the DataFrame to avoid modifying the original data.
+        Automatically identifies numeric columns for statistical analysis.
         
         Args:
-            df: DataFrame to profile
+            df: DataFrame to profile (will be copied internally)
         """
+        # Create copy to avoid modifying original data
         self.df = df.copy()
+        # Identify numeric columns for statistical analysis
         self.numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
         
     def generate_summary_statistics(self) -> pd.DataFrame:
