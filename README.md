@@ -120,17 +120,9 @@ jupyter notebook notebooks/
 | TModA | Module A Temperature | °C |
 | TModB | Module B Temperature | °C |
 
-## Contributing
-1. Create a feature branch: `git checkout -b feature-name`
-2. Make changes and commit: `git commit -m "description"`
-3. Push to branch: `git push origin feature-name`
-4. Create Pull Request
+
 
 ## Team
 - **Analytics Engineer**: Naomi Meseret
-
-## License
-MoonLight Energy Solutions - Internal Use Only
-
 
 
