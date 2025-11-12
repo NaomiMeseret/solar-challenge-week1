@@ -1,17 +1,33 @@
 from __future__ import annotations
 
+import os
+import sys
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import streamlit as st
 
-from app.utils import (
-    available_countries,
-    load_countries,
-    summary_table,
-    avg_ghi,
-    METRICS,
-)
+try:
+    from app.utils import (
+        available_countries,
+        load_countries,
+        summary_table,
+        avg_ghi,
+        METRICS,
+    )
+except ModuleNotFoundError:
+    # When executed via `streamlit run app/main.py`, Streamlit may set the
+    # working module path to the app directory only. Ensure project root is on sys.path.
+    ROOT = os.path.dirname(os.path.dirname(__file__))
+    if ROOT not in sys.path:
+        sys.path.insert(0, ROOT)
+    from app.utils import (
+        available_countries,
+        load_countries,
+        summary_table,
+        avg_ghi,
+        METRICS,
+    )
 
 
 st.set_page_config(page_title="Cross-Country Solar Dashboard", layout="wide")
