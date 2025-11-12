@@ -120,9 +120,38 @@ jupyter notebook notebooks/
 | TModA | Module A Temperature | °C |
 | TModB | Module B Temperature | °C |
 
-
+## Contributing
+1. Create a feature branch: `git checkout -b feature-name`
+2. Make changes and commit: `git commit -m "description"`
+3. Push to branch: `git push origin feature-name`
+4. Create Pull Request
 
 ## Team
 - **Analytics Engineer**: Naomi Meseret
 
+## License
+MoonLight Energy Solutions - Internal Use Only
 
+
+
+
+## Interactive Dashboard (Streamlit)
+
+This repository includes a simple Streamlit app to compare solar metrics across countries using local cleaned CSVs.
+
+### Features
+- Country multi-select (Benin, Sierra Leone, Togo)
+- Metric selector (GHI, DNI, DHI)
+- Boxplot by country
+- Ranking bar chart by average GHI
+- Summary table (mean / median / std)
+
+### Run Locally
+```bash
+streamlit run app/main.py
+```
+
+Notes:
+- The app reads local files from the `data/` folder (which is gitignored).
+- Expected cleaned files: `benin_clean.csv`, `sierra_leone_clean.csv`, `togo_clean.csv`.
+- Place the files in `data/` and run the app from the project root.
