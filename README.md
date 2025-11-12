@@ -146,6 +146,7 @@ This repository includes a simple Streamlit app to compare solar metrics across 
 - Ranking bar chart by average GHI
 - Summary table (mean / median / std)
 
+![Dashboard Overview](dashboard_screenshots/dashboard_overview.png)
 ### Run Locally
 ```bash
 streamlit run app/main.py
