@@ -36,6 +36,17 @@ class DataCleaner:
             self.log_action('Removed duplicates', f'{removed} duplicate rows removed')
         
         return self.df
+
+    def coerce_numeric_columns(self) -> pd.DataFrame:
+        cols = [
+            'GHI', 'DNI', 'DHI', 'ModA', 'ModB', 'Tamb', 'RH', 'WS', 'WSgust',
+            'WSstdev', 'WD', 'WDstdev', 'BP', 'Cleaning', 'Precipitation',
+            'TModA', 'TModB'
+        ]
+        for col in cols:
+            if col in self.df.columns:
+                self.df[col] = pd.to_numeric(self.df[col], errors='coerce')
+        return self.df
     
     def handle_missing_values(self, strategy: str = 'median', threshold: float = 0.5) -> pd.DataFrame:
         """
@@ -151,6 +162,7 @@ class DataCleaner:
         print("\n=== Starting Data Cleaning Pipeline ===\n")
         
         self.remove_duplicates()
+        self.coerce_numeric_columns()
         self.handle_missing_values(strategy='median')
         self.validate_irradiance_values()
         

@@ -40,12 +40,14 @@ def clean_dataset(country: str, output_dir: str = 'data', remove_outliers: bool 
     
     cleaned_df = cleaner.clean_pipeline(remove_outliers=remove_outliers)
     
+    # Ensure consistent file naming: use slug version of country (spaces/hyphens -> underscores, lowercased)
+    slug = country.strip().lower().replace(' ', '_').replace('-', '_')
     os.makedirs(output_dir, exist_ok=True)
-    output_file = os.path.join(output_dir, f'{country}_clean.csv')
+    output_file = os.path.join(output_dir, f'{slug}_clean.csv')
     cleaner.save_clean_data(output_file)
     
     cleaning_report = cleaner.get_cleaning_report()
-    report_file = os.path.join('reports', f'{country}_cleaning_log.csv')
+    report_file = os.path.join('reports', f'{slug}_cleaning_log.csv')
     os.makedirs('reports', exist_ok=True)
     cleaning_report.to_csv(report_file, index=False)
     print(f"📋 Cleaning log saved to: {report_file}")

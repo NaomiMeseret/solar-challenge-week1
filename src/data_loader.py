@@ -58,8 +58,9 @@ class SolarDataLoader:
         Load CSV file into DataFrame with encoding fallback.
         
         This method handles common encoding issues in solar data files by attempting
-        UTF-8 first, then falling back to Latin-1. It also skips the second row
-        which typically contains units in solar measurement files.
+        UTF-8 first, then falling back to Latin-1. It will try both with and
+        without skipping the second row (which sometimes contains units) to be
+        robust across different file formats.
         
         Args:
             filename: Name of CSV file (e.g., 'benin-malanville.csv')
@@ -82,40 +83,73 @@ class SolarDataLoader:
         if not filepath.exists():
             raise FileNotFoundError(f"Data file not found: {filepath}")
         
-        # Try UTF-8 encoding first (standard), fallback to Latin-1 for legacy files
-        try:
-            df = pd.read_csv(filepath, encoding='utf-8', skiprows=[1])  # Skip units row
-        except UnicodeDecodeError:
-            df = pd.read_csv(filepath, encoding='latin-1', skiprows=[1])
-        
-        # Parse Timestamp column if present, coerce errors to NaT
-        if 'Timestamp' in df.columns:
-            df['Timestamp'] = pd.to_datetime(df['Timestamp'], errors='coerce')
-        
-        print(f"Loaded {len(df)} records from {filename}")
-        
-        return df
+        # Attempt multiple read strategies for robustness
+        last_exception = None
+        for skip in (None, [1]):
+            for enc in ('utf-8', 'latin-1'):
+                try:
+                    df = pd.read_csv(filepath, encoding=enc, skiprows=skip)
+                    # Try to identify a timestamp-like column (case-insensitive)
+                    ts_col = None
+                    for col in df.columns:
+                        if isinstance(col, str) and col.strip().lower() == 'timestamp':
+                            ts_col = col
+                            break
+                    if ts_col is not None:
+                        df[ts_col] = pd.to_datetime(df[ts_col], errors='coerce')
+                        if ts_col != 'Timestamp':
+                            df.rename(columns={ts_col: 'Timestamp'}, inplace=True)
+                    print(f"Loaded {len(df)} records from {filename}")
+                    return df
+                except Exception as e:
+                    last_exception = e
+                    continue
+
+        # If all strategies failed, raise the last exception
+        raise last_exception if last_exception else RuntimeError("Failed to read CSV with all strategies")
     
     def load_country_data(self, country: str) -> pd.DataFrame:
         """
-        Load data for specific country using standardized naming convention.
+        Load data for a specific country by discovering the appropriate CSV file.
         
-        Constructs filename from country name and loads the corresponding CSV file.
-        All country data files follow the pattern: {country}-malanville.csv
+        This method searches the data directory for a raw CSV whose filename
+        contains the country name (case-insensitive), ignoring spaces, hyphens,
+        and underscores. Cleaned files are excluded (filenames containing
+        'clean'). If exactly one candidate is found, it is loaded. If multiple
+        candidates are found, the first one sorted by name is used.
         
         Args:
-            country: Country name (e.g., 'benin', 'sierra-leone', 'togo')
+            country: Country name (e.g., 'benin', 'sierra leone', 'togo')
             
         Returns:
             DataFrame with country data including all measurement columns
             
-        Example:
-            >>> loader = SolarDataLoader()
-            >>> benin_df = loader.load_country_data('benin')
-            Loaded 49196 records from benin-malanville.csv
+        Raises:
+            FileNotFoundError: If no matching raw CSV is found in the data directory
         """
-        # Construct filename using standard naming pattern
-        filename = f"{country.lower()}-malanville.csv"
+        norm = lambda s: ''.join(ch for ch in s.lower() if ch.isalnum())
+        target = norm(country)
+
+        candidates = []
+        for fname in os.listdir(self.data_dir):
+            fl = fname.lower()
+            if not fl.endswith('.csv'):
+                continue
+            if 'clean' in fl:
+                # Skip already-cleaned outputs
+                continue
+            if target in norm(fl):
+                candidates.append(fname)
+
+        if not candidates:
+            raise FileNotFoundError(
+                f"No raw CSV found for country '{country}' in {self.data_dir}. "
+                f"Please place the raw CSV in the data directory."
+            )
+
+        # Deterministic selection if multiple candidates
+        candidates.sort()
+        filename = candidates[0]
         return self.load_csv(filename)
     
     def validate_columns(self, df: pd.DataFrame) -> bool:
